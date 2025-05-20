@@ -15,15 +15,17 @@ const AssessmentForm: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   
+  const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
   const [questions, setQuestions] = useState([
-    { id: '1', text: '', marks: 0, correctAnswer: '' },
+    { id: generateUniqueId(), text: '', marks: 0, correctAnswer: '' },
   ]);
   
   const addQuestion = () => {
     setQuestions([
       ...questions,
       {
-        id: `${questions.length + 1}`,
+        id: generateUniqueId(),
         text: '',
         marks: 0,
         correctAnswer: '',

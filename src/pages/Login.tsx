@@ -7,7 +7,7 @@ const Login: React.FC = () => {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Fullscreen background image */}
       <img
-        src="/bg_1.jpg"
+        src={import.meta.env.BASE_URL + 'bg_1.jpg'}
         alt="Background"
         className="absolute inset-0 w-full h-full object-cover z-0"
       />

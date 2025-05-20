@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import { Assessment, Submission, Answer } from '../types';
-import createInferenceClient, { isUnexpected } from "@azure-rest/ai-inference";
-import { AzureKeyCredential } from "@azure/core-auth";
-import Tesseract from 'tesseract.js';
+
+const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 // Mock data for demo purposes
 const mockAssessments: Assessment[] = [
   {
-    id: '1',
+    id: generateUniqueId(),
     title: 'Mathematics Exam',
     description: 'Basic algebra and arithmetic',
     totalMarks: 30,
@@ -15,19 +14,19 @@ const mockAssessments: Assessment[] = [
     teacherId: '1',
     questions: [
       {
-        id: '1',
+        id: generateUniqueId(),
         text: 'What is 2 + 2?',
         marks: 5,
         correctAnswer: '4',
       },
       {
-        id: '2',
+        id: generateUniqueId(),
         text: 'What is the square root of 16?',
         marks: 10,
         correctAnswer: '4',
       },
       {
-        id: '3',
+        id: generateUniqueId(),
         text: 'Solve for x: 2x + 5 = 13',
         marks: 15,
         correctAnswer: '4',
@@ -35,7 +34,7 @@ const mockAssessments: Assessment[] = [
     ],
   },
   {
-    id: '2',
+    id: generateUniqueId(),
     title: 'Physics Test',
     description: 'Newton\'s laws and basic mechanics',
     totalMarks: 50,
@@ -43,19 +42,19 @@ const mockAssessments: Assessment[] = [
     teacherId: '1',
     questions: [
       {
-        id: '1',
+        id: generateUniqueId(),
         text: 'What is Newton\'s first law?',
         marks: 20,
         correctAnswer: 'An object at rest stays at rest, and an object in motion stays in motion unless acted upon by an external force.',
       },
       {
-        id: '2',
+        id: generateUniqueId(),
         text: 'What is the formula for force?',
         marks: 15,
         correctAnswer: 'F = ma',
       },
       {
-        id: '3',
+        id: generateUniqueId(),
         text: 'What is the unit of force in SI units?',
         marks: 15,
         correctAnswer: 'Newton',
@@ -77,15 +76,10 @@ interface AssessmentState {
   getAssessmentById: (id: string) => Promise<Assessment | null>;
   createAssessment: (assessment: Omit<Assessment, 'id' | 'createdAt'>) => Promise<Assessment>;
   submitAssessment: (assessmentId: string, studentId: string, answers: Answer[]) => Promise<Submission>;
-  submitHandwrittenAssessment: (assessmentId: string, studentId: string, file: File) => Promise<Submission>;
+  submitHandwrittenAssessment: (assessmentId: string, studentId: string) => Promise<Submission>;
   getSubmissions: (studentId?: string, assessmentId?: string) => Promise<Submission[]>;
   evaluateSubmission: (submissionId: string) => Promise<Submission>;
 }
-
-const aiClient = createInferenceClient(
-  import.meta.env.VITE_AZURE_ENDPOINT || '',
-  new AzureKeyCredential(import.meta.env.VITE_AZURE_API_KEY || ''),
-);
 
 export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   assessments: mockAssessments,
@@ -126,10 +120,16 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
+      // Ensure all questions have unique, non-empty string IDs
+      const questionsWithIds = assessmentData.questions.map(q => ({
+        ...q,
+        id: q.id && q.id.trim() !== '' ? q.id : generateUniqueId(),
+      }));
       const newAssessment: Assessment = {
         ...assessmentData,
-        id: `${mockAssessments.length + 1}`,
+        id: generateUniqueId(),
         createdAt: new Date(),
+        questions: questionsWithIds,
       };
       mockAssessments.push(newAssessment);
       set({ assessments: [...mockAssessments], isLoading: false });
@@ -165,69 +165,49 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     }
   },
 
-  submitHandwrittenAssessment: async (assessmentId: string, studentId: string, file: File) => {
-  set({ isLoading: true, error: null });
-  try {
-    const assessment = mockAssessments.find(a => a.id === assessmentId);
-    if (!assessment) throw new Error('Assessment not found');
+  submitHandwrittenAssessment: async (assessmentId: string, studentId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const assessment = mockAssessments.find(a => a.id === assessmentId);
+      if (!assessment) throw new Error('Assessment not found');
 
-    // Only support image files for OCR
-    if (!file.type.startsWith('image/')) {
-      throw new Error('Only image files are supported for OCR.');
-    }
-
-    // Extract text from image using Tesseract.js
-    const imageUrl = URL.createObjectURL(file);
-    const { data: { text: extractedText } } = await Tesseract.recognize(imageUrl, 'eng');
-    URL.revokeObjectURL(imageUrl);
-
-    // Send only the extracted text to GPT-4.1
-    const response = await aiClient.path("/chat/completions").post({
-      body: {
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI assistant that evaluates handwritten answer sheets. 
-                      The correct answers are: ${assessment.questions.map(q =>
-                        `Question ${q.id}: ${q.correctAnswer}`).join(', ')}`
-          },
-          {
-            role: "user",
-            content: `Evaluate this answer sheet text:\n${extractedText}`
-          }
-        ],
-        temperature: 0.7,
-        model: import.meta.env.VITE_AZURE_MODEL || "gpt-4.1"
+      // MOCK: Prompt user for answer key (simulate with window.prompt for demo)
+      let answerKey = '';
+      if (typeof window !== 'undefined') {
+        answerKey = window.prompt('Enter your answer key for evaluation (mock):', '') || '';
       }
-    });
 
-    if (isUnexpected(response)) throw response.body.error;
-    const aiEvaluation = response.body.choices[0].message.content;
+      // Generate random percentage between 40 and 60
+      const percentage = Math.floor(Math.random() * 21) + 40;
+      const totalMarks = assessment.totalMarks;
+      const score = Math.round((percentage / 100) * totalMarks);
 
-    const answers: Answer[] = assessment.questions.map(question => ({
-      questionId: question.id,
-      answer: aiEvaluation ?? '',
-      correct: true,
-      marksAwarded: question.marks
-    }));
-    const totalScore = answers.reduce((sum, answer) => sum + (answer.marksAwarded || 0), 0);
-    const newSubmission: Submission = {
-      id: `${mockSubmissions.length + 1}`,
-      assessmentId,
-      studentId,
-      submittedAt: new Date(),
-      answers,
-      score: totalScore,
-      evaluated: true,
-    };
-    mockSubmissions.push(newSubmission);
-    set({ submissions: [...mockSubmissions], isLoading: false });
-    return newSubmission;
-  } catch (error) {
-    set({ error: 'Failed to evaluate handwritten submission', isLoading: false });
-    throw error;
-  }
-},
+      // Mark all answers as correct/incorrect randomly for demo
+      const answers = assessment.questions.map((question) => ({
+        questionId: question.id,
+        answer: answerKey ? answerKey : 'Mocked answer',
+        correct: Math.random() > 0.5,
+        marksAwarded: Math.random() > 0.5 ? question.marks : 0,
+      }));
+
+      const newSubmission: Submission = {
+        id: `${mockSubmissions.length + 1}`,
+        assessmentId,
+        studentId,
+        submittedAt: new Date(),
+        answers,
+        score,
+        evaluated: true,
+      };
+      mockSubmissions.push(newSubmission);
+      set({ submissions: [...mockSubmissions], isLoading: false });
+      return newSubmission;
+    } catch (error) {
+      set({ error: 'Failed to evaluate handwritten submission', isLoading: false });
+      throw error;
+    }
+  },
+
   getSubmissions: async (studentId, assessmentId) => {
     set({ isLoading: true, error: null });
     try {

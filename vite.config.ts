@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/User_interface_for_handwritten_answer_sheet_evaluation/',
+  base: '/answersheet_evaluator/', // <-- Update to match your new repo name
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
