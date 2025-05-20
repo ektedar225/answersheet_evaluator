@@ -5,15 +5,15 @@ import { User, UserRole } from '../types';
 const mockUsers = [
   {
     id: '1',
-    name: 'John Teacher',
-    email: 'teacher@example.com',
+    name: 'Ashish Pathak',
+    email: 'ashishpathak@gmail.com',
     role: 'teacher' as UserRole,
-    password: 'password123',
+    password: 'answer123',
   },
   {
     id: '2',
-    name: 'Jane Student',
-    email: 'student@example.com',
+    name: 'Ektedar',
+    email: 'ektedar5100@gmail.com',
     role: 'student' as UserRole,
     password: 'password123',
   },

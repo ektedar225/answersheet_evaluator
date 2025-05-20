@@ -96,9 +96,9 @@ const LoginForm: React.FC = () => {
           
           <div className="text-center text-sm text-gray-500 mt-4">
             <p>
-              For demo: Teacher (teacher@example.com / password123) 
+              For demo: Teacher (ashishpathak@gmail.com / answer123) 
               <br />
-              Student (student@example.com / password123)
+              Student (ektedar5100@gmail.com / password123)
             </p>
           </div>
         </form>
