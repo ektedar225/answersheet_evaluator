@@ -18,7 +18,7 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
           <Book className="h-8 w-8 text-primary-600" />
-          <span className="text-xl font-bold text-gray-900">EduEval</span>
+          <span className="text-xl font-bold text-gray-900">EKT_Evaluator</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">

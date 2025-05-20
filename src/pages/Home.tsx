@@ -121,7 +121,7 @@ const Home: React.FC = () => {
             Ready to Transform Assessment Evaluation?
           </h2>
           <p className="text-xl mb-8 text-primary-100">
-            Join educators and students who are already using EduEval to streamline the assessment process.
+            Join educators and students who are already using EKT_Evaluator to streamline the assessment process.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/register">

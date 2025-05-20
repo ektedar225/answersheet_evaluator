@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Book className="h-6 w-6 text-primary-600" />
-              <span className="text-lg font-bold text-gray-900">EduEval</span>
+              <span className="text-lg font-bold text-gray-900">EKT_Evaluator</span>
             </div>
             <p className="text-sm text-gray-600 max-w-md">
               A modern assessment platform for educational institutions. Simplifying the evaluation process for teachers and students.
@@ -56,7 +56,7 @@ const Footer: React.FC = () => {
         
         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-600">
-            &copy; {new Date().getFullYear()} EduEval. All rights reserved.
+            &copy; {new Date().getFullYear()} EKT_Evaluator. All rights reserved.
           </p>
         </div>
       </div>
